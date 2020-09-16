@@ -1,0 +1,33 @@
+# https://hub.docker.com/r/gitlab/gitlab-ce
+# https://docs.gitlab.com/omnibus/settings/nginx.html#using-a-non-bundled-web-server
+
+version: '2.2'
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:${GITLAB_CE_VERSION}
+    restart: always
+    container_name: gitlab
+    hostname: "${GITLAB_HOST}"
+    ports:
+      - 80:80
+      - 443:443
+      - 22:22
+    volumes:
+      - './volumes/config:/etc/gitlab'
+      - './volumes/logs:/var/log/gitlab'
+      - './volumes/data:/var/opt/gitlab'
+    networks: 
+      - gitlab-network
+  
+  runner:
+    image: gitlab/gitlab-runner:${GITLAB_RUNNER_VERSION}
+    restart: always
+    container_name: gitlab_runner
+    environment:
+      - CI_SERVER_URL=http://${GITLAB_HOST}/
+    volumes:
+      - ./volumes/runner:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    networks: 
+      - gitlab-network
+    

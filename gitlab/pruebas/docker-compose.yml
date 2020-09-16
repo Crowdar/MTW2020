@@ -1,0 +1,66 @@
+# https://hub.docker.com/r/gitlab/gitlab-ce
+# https://docs.gitlab.com/omnibus/settings/nginx.html#using-a-non-bundled-web-server
+
+version: '2.2'
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:${GITLAB_CE_VERSION}
+    restart: always
+    container_name: gitlabX
+    hostname: "${GITLAB_HOST}"
+    #environment:
+      #- TZ=${TZ}
+      #- VIRTUAL_HOST=${GITLAB_HOST},${REGISTRY_HOST}
+      #- VIRTUAL_PORT=80
+      #- LETSENCRYPT_HOST=${GITLAB_HOST},${REGISTRY_HOST}
+      #- LETSENCRYPT_EMAIL=${LETSENCRYPT_EMAIL}
+    ports:
+      - 80:80
+      - 443:443
+      - 22:22
+    volumes:
+      - './volumes/config:/etc/gitlab'
+      - './volumes/logs:/var/log/gitlab'
+      - './volumes/data:/var/opt/gitlab'
+    #depends_on:
+      #- postgres
+    #networks:
+      #- gitlab1bis
+        #net:
+          #ipv4_address: 172.19.0.3
+  
+  runner:
+    image: gitlab/gitlab-runner:${GITLAB_RUNNER_VERSION}
+    restart: always
+    container_name: gitlab_runnerX
+    environment:
+      - CI_SERVER_URL=http://${GITLAB_HOST}/
+    volumes:
+      - ./volumes/runner:/etc/gitlab-runner
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+    #networks:
+        #net:
+          #ipv4_address: 172.19.0.4
+
+  #postgres:
+    #image: postgres:${POSTGRES_VERSION}
+    #restart: always
+    #container_name: gitlab_postgresql
+    ## https://github.com/docker-library/docs/tree/master/postgres#environment-variables
+    #environment:
+      #- POSTGRES_USER=gitlab
+      #- POSTGRES_DB=gitlabhq_production
+      #- POSTGRES_PASSWORD=password
+    #volumes:
+      #- ./volumes/postgres:/var/lib/postgresql/data      
+    #networks:
+      #- gitlab-network
+    
+    
+#networks:
+    #- gitlab1bis
+  #net:
+    #ipam:
+      #config:
+        #- subnet: 172.19.0.0/24
+          #gateway: 172.19.0.1
